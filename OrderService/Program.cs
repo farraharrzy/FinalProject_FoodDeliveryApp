@@ -39,8 +39,6 @@ builder.Services.AddCors(options =>
 }
 );
 
-//Kafka
-builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("KafkaSettings"));
 
 // graphql
 builder.Services

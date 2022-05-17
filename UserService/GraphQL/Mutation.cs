@@ -11,6 +11,7 @@ using HotChocolate.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Collections.Generic;
 using UserService.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.GraphQL
 {
@@ -32,7 +33,15 @@ namespace UserService.GraphQL
                 Username = input.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(input.Password) // encrypt password
             };
-
+            var memberRole = context.Roles.Where(m => m.Name == "BUYER").FirstOrDefault();
+            if (memberRole == null)
+                throw new Exception("Invalid Role");
+            var userRole = new UserRole
+            {
+                RoleId = memberRole.Id,
+                UserId = newUser.Id
+            };
+            newUser.UserRoles.Add(userRole);
             // EF
             var ret = context.Users.Add(newUser);
             await context.SaveChangesAsync();
@@ -76,7 +85,7 @@ namespace UserService.GraphQL
                     }
                 }
 
-                var expired = DateTime.Now.AddHours(3);
+                var expired = DateTime.Now.AddHours(8);
                 var jwtToken = new JwtSecurityToken(
                     issuer: tokenSettings.Value.Issuer,
                     audience: tokenSettings.Value.Audience,
@@ -92,6 +101,58 @@ namespace UserService.GraphQL
             }
 
             return await Task.FromResult(new UserToken(null, null, Message: "Username or password was invalid"));
+        }
+
+        //Update
+        [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<User> UpdateUserAsync(
+            UserData input,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (user != null)
+            {
+                user.FullName = input.FullName;
+                user.Email = input.Email;
+                user.Username = input.Username;
+
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(user);
+        }
+        public async Task<User> DeleteUserByIdAsync(
+            int id,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == id).Include(o => o.UserRoles).FirstOrDefault();
+            if (user != null)
+            {
+                context.Users.Remove(user);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(user);
+        }
+
+        [Authorize]
+        public async Task<User> ChangePasswordByUserAsync(
+            UserData input,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (user != null)
+            {
+                user.FullName = input.FullName;
+                user.Email = input.Email;
+                user.Username = input.Username;
+
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(user);
         }
     }
 }

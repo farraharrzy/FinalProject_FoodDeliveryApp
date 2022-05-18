@@ -61,6 +61,12 @@ namespace OrderService.Models
                 entity.Property(e => e.Code)
                     .HasMaxLength(50)
                     .HasColumnName("code");
+
+                entity.HasOne(d => d.Courier)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.CourierId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderToCourier");
             });
 
             modelBuilder.Entity<OrderDetail>(entity =>

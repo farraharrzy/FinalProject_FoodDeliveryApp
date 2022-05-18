@@ -6,42 +6,59 @@ namespace OrderService.GraphQL
 {
     public class Mutation
     {
-        [Authorize (Roles = new[] { "BUYER" })]
-        public async Task<Order> AddOrderAsync(
-            OrderInput input,
-            [Service] FoodDeliveryAppContext context, ClaimsPrincipal claimsPrincipal)
+        [Authorize(Roles = new[] { "BUYER" })]
+        public async Task<OrderData> AddOrderAsync(
+        OrderData input,
+        ClaimsPrincipal claimsPrincipal,
+        [Service] FoodDeliveryAppContext context)
         {
-            var username = claimsPrincipal.Identity.Name;
-            var user = context.Users.Where(o => o.Username == username).FirstOrDefault();
-            if (user != null)
+            using var transaction = context.Database.BeginTransaction();
+            var userName = claimsPrincipal.Identity.Name;
+            try
             {
-                var order = new Order
+                var user = context.Users.Where(o => o.Username == userName).FirstOrDefault();
+                if (user != null)
                 {
-                    Code = input.Code,
-                    UserId = input.UserId
-                };
-
-                for (int i = 0; i < input.OrderDetails.Count; i++)
-                {
-                    var orderdetails = new OrderDetail
+                    // EF
+                    var order = new Order
                     {
-                        OrderId = order.Id,
-                        FoodId = input.OrderDetails[i].FoodId,
-                        Quantity = input.OrderDetails[i].Quantity
-
+                        Code = Guid.NewGuid().ToString(), // generate random chars using GUID
+                        UserId = user.Id,
+                        CourierId = input.CourierId
                     };
-                    
-                    order.OrderDetails.Add(orderdetails);
+
+                    foreach (var item in input.OrderDetails)
+                    {
+                        var detail = new OrderDetail
+                        {
+                            OrderId = order.Id,
+                            FoodId = item.FoodId,
+                            Quantity = item.Quantity
+                        };
+                        order.OrderDetails.Add(detail);
+                    }
+                    context.Orders.Add(order);
+                    context.SaveChanges();
+                    await transaction.CommitAsync();
+
+
+                    //input.Id = order.Id;
+                    //input.Code = order.Code;
                 }
-                var ret = context.Orders.Add(order);
-                await context.SaveChangesAsync();
-                return ret.Entity;
+                else
+                    throw new Exception("user was not found");
             }
-            else
+            catch (Exception err)
             {
-                return new Order();
+                transaction.Rollback();
             }
 
+            return input;
         }
     }
+
+
+
+
+
 }

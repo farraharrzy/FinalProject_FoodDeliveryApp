@@ -1,4 +1,5 @@
 ﻿using HotChocolate.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using OrderService.Models;
 using System.Security.Claims;
 
@@ -55,6 +56,51 @@ namespace OrderService.GraphQL
 
             return input;
         }
+
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public async Task<OrderData> UpdateOrderAsync(
+            OrderData input,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var order = context.Orders.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (order != null)
+            {
+                // EF
+                order.Code = Guid.NewGuid().ToString();
+                order.UserId = input.UserId;
+                order.CourierId = input.CourierId;
+
+                foreach (var item in input.OrderDetails)
+                {
+                    var detail = new OrderDetail
+                    {
+                        OrderId = order.Id,
+                        FoodId = item.FoodId,
+                        Quantity = item.Quantity
+                    };
+                    order.OrderDetails.Add(detail);
+                }
+                context.Orders.Update(order);
+                context.SaveChanges();
+            }
+            return input;
+        }
+
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public async Task<Order> DeleteOrderByIdAsync(
+            int id,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var order = context.Orders.Where(o => o.Id == id).Include(o=>o.OrderDetails).FirstOrDefault();
+            if (order != null)
+            {
+                context.Orders.Remove(order);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(order);
+        }
+
     }
 
 

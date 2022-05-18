@@ -6,7 +6,7 @@ namespace OrderService.GraphQL
     (
        int? Id,
        string? Code,
-       int? UserId,
+       int UserId,
        int CourierId,
        List<OrderDetailData> OrderDetails
     );

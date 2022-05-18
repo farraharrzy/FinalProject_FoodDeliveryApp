@@ -70,16 +70,6 @@ namespace OrderService.GraphQL
                 order.UserId = input.UserId;
                 order.CourierId = input.CourierId;
 
-                foreach (var item in input.OrderDetails)
-                {
-                    var detail = new OrderDetail
-                    {
-                        OrderId = order.Id,
-                        FoodId = item.FoodId,
-                        Quantity = item.Quantity
-                    };
-                    order.OrderDetails.Add(detail);
-                }
                 context.Orders.Update(order);
                 context.SaveChanges();
             }

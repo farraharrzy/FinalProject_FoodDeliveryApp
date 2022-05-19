@@ -61,6 +61,18 @@ namespace FoodService.Models
                 entity.Property(e => e.Code)
                     .HasMaxLength(50)
                     .HasColumnName("code");
+
+                entity.HasOne(d => d.Courier)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.CourierId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_OrderToCourier");
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_UserToOrder");
             });
 
             modelBuilder.Entity<OrderDetail>(entity =>

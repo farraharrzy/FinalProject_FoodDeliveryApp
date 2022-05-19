@@ -29,5 +29,15 @@ namespace UserService.GraphQL
             return new List<Profile>().AsQueryable();
         }
 
+        //Courier
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public IQueryable<Courier> GetCouriers([Service] FoodDeliveryAppContext context) =>
+            context.Couriers.Select(p => new Courier()
+            {
+                Id = p.Id,
+                CourierName = p.CourierName,
+                PhoneNumber = p.PhoneNumber
+            });
+
     }
 }

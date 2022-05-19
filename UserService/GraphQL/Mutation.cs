@@ -173,74 +173,51 @@ namespace UserService.GraphQL
         }
 
         //Manage Courier
-        public async Task<UserData> AddCourierAsync(
-            RegisterUser input,
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public async Task<Courier> AddCourierAsync(
+            CourierInput input,
             [Service] FoodDeliveryAppContext context)
         {
-            var user = context.Users.Where(o => o.Username == input.Username).FirstOrDefault();
-            if (user != null)
-            {
-                return await Task.FromResult(new UserData());
-            }
-            var newUser = new User
-            {
-                FullName = input.FullName,
-                Email = input.Email,
-                Username = input.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(input.Password) // encrypt password
-            };
-            var memberRole = context.Roles.Where(m => m.Name == "COURIER").FirstOrDefault();
-            if (memberRole == null)
-                throw new Exception("Invalid Role");
-            var userRole = new UserRole
-            {
-                RoleId = memberRole.Id,
-                UserId = newUser.Id
-            };
-            newUser.UserRoles.Add(userRole);
             // EF
-            var ret = context.Users.Add(newUser);
+            var kurir = new Courier
+            {
+                CourierName = input.CourierName,
+                PhoneNumber = input.PhoneNumber
+            };
+
+            var ret = context.Couriers.Add(kurir);
             await context.SaveChangesAsync();
 
-            return await Task.FromResult(new UserData
-            {
-                Id = newUser.Id,
-                Username = newUser.Username,
-                Email = newUser.Email,
-                FullName = newUser.FullName
-            });
+            return ret.Entity;
         }
-
-        [Authorize(Roles = new[] { "MANAGER" })]
-        public async Task<User> UpdateCourierAsync(
-            UserData input,
+        public async Task<Courier> UpdateCourierAsync(
+            CourierInput input,
             [Service] FoodDeliveryAppContext context)
         {
-            var user = context.Users.Where(o => o.Id == input.Id).FirstOrDefault();
-            if (user != null)
+            var kurir = context.Couriers.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (kurir != null)
             {
-                user.FullName = input.FullName;
-                user.Email = input.Email;
-                user.Username = input.Username;
+                kurir.CourierName = input.CourierName;
+                kurir.PhoneNumber = input.PhoneNumber;
 
-                context.Users.Update(user);
+                context.Couriers.Update(kurir);
                 await context.SaveChangesAsync();
             }
 
-            return await Task.FromResult(user);
+            return await Task.FromResult(kurir);
         }
-        public async Task<User> DeleteCourierByIdAsync(
+        public async Task<Courier> DeleteCourierByIdAsync(
             int id,
             [Service] FoodDeliveryAppContext context)
         {
-            var user = context.Users.Where(o => o.Id == id).Include(o => o.UserRoles).FirstOrDefault();
-            if (user != null)
+            var kurir = context.Couriers.Where(o => o.Id == id).FirstOrDefault();
+            if (kurir != null)
             {
-                context.Users.Remove(user);
+                context.Couriers.Remove(kurir);
                 await context.SaveChangesAsync();
             }
 
-            return await Task.FromResult(user);
+            return await Task.FromResult(kurir);
         }
 
     }

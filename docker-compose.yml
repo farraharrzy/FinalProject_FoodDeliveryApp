@@ -1,0 +1,31 @@
+version: '3.4'
+
+services:
+  userservice:
+    image: ${DOCKER_REGISTRY-}userservice
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+
+  orderservice:
+    image: ${DOCKER_REGISTRY-}orderservice
+    build:
+      context: .
+      dockerfile: OrderService/Dockerfile
+
+  foodservice:
+    image: ${DOCKER_REGISTRY-}foodservice
+    build:
+      context: .
+      dockerfile: FoodService/Dockerfile
+
+  server:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - 1445:1433
+    volumes:
+      - ~/apps/mssql/data:/var/lib/mssqlql/data
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=123Pass#
+

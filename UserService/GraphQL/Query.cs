@@ -31,12 +31,24 @@ namespace UserService.GraphQL
 
         //Courier
         [Authorize(Roles = new[] { "MANAGER" })]
-        public IQueryable<Courier> GetCouriers([Service] FoodDeliveryAppContext context) =>
-            context.Couriers.Select(p => new Courier()
+        public IQueryable<User> GetCouriers([Service] FoodDeliveryAppContext context)
+        {
+            var roleKurir = context.Roles.Where(k => k.Name == "COURIER").FirstOrDefault();
+            var kurirs = context.Users.Where(k => k.UserRoles.Any(o => o.RoleId == roleKurir.Id));
+            return kurirs.AsQueryable();
+        } 
+            
+
+
+
+        public IQueryable<CourierProfile> GetCourierProfiles([Service] FoodDeliveryAppContext context) =>
+            context.CourierProfiles.Select(p => new CourierProfile()
             {
                 Id = p.Id,
                 CourierName = p.CourierName,
-                PhoneNumber = p.PhoneNumber
+                PhoneNumber = p.PhoneNumber,
+                UserId = p.UserId,
+                Availability = p.Availability
             });
 
     }

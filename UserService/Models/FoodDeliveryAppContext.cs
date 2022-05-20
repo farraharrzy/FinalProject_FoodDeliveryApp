@@ -16,7 +16,7 @@ namespace UserService.Models
         {
         }
 
-        public virtual DbSet<Courier> Couriers { get; set; } = null!;
+        public virtual DbSet<CourierProfile> CourierProfiles { get; set; } = null!;
         public virtual DbSet<Food> Foods { get; set; } = null!;
         public virtual DbSet<Order> Orders { get; set; } = null!;
         public virtual DbSet<OrderDetail> OrderDetails { get; set; } = null!;
@@ -36,13 +36,19 @@ namespace UserService.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Courier>(entity =>
+            modelBuilder.Entity<CourierProfile>(entity =>
             {
-                entity.ToTable("Courier");
+                entity.ToTable("CourierProfile");
 
                 entity.Property(e => e.CourierName).HasMaxLength(50);
 
                 entity.Property(e => e.PhoneNumber).HasMaxLength(50);
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.CourierProfiles)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_UserToCourier");
             });
 
             modelBuilder.Entity<Food>(entity =>
@@ -61,6 +67,14 @@ namespace UserService.Models
                 entity.Property(e => e.Code)
                     .HasMaxLength(50)
                     .HasColumnName("code");
+
+                entity.Property(e => e.Latitude)
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Longitude)
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
 
                 entity.HasOne(d => d.Courier)
                     .WithMany(p => p.Orders)
@@ -88,7 +102,7 @@ namespace UserService.Models
                 entity.HasOne(d => d.Order)
                     .WithMany(p => p.OrderDetails)
                     .HasForeignKey(d => d.OrderId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_OrderId");
             });
 

@@ -224,7 +224,9 @@ namespace UserService.GraphQL
             {
                 CourierName = input.CourierName,
                 PhoneNumber = input.PhoneNumber,
-                UserId = input.UserId
+                UserId = input.UserId,
+                Availability = input.Availability
+                //Availability = Convert.ToBoolean(input.Availability)  
             };
 
             var ret = context.CourierProfiles.Add(kurir);

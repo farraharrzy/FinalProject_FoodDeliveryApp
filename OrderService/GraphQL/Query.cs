@@ -24,5 +24,20 @@ namespace OrderService.GraphQL
         public IQueryable<Order> GetOrders([Service] FoodDeliveryAppContext context) =>
             context.Orders.Include(o => o.OrderDetails);
 
+        //View Tracking Order By Buyer
+        [Authorize(Roles = new[] { "BUYER" })]
+        public IQueryable<Order> ViewTrackingOrderByToken([Service] FoodDeliveryAppContext context, ClaimsPrincipal claimsPrincipal)
+        {
+            var username = claimsPrincipal.Identity.Name;
+            var user = context.Users.Where(o => o.Username == username).FirstOrDefault();
+            if (user != null)
+            {
+                var orders = context.Orders.Where(o => o.UserId == user.Id).Include(o => o.OrderDetails).OrderBy(o => o.Id).LastOrDefault();
+                var latestOrder = context.Orders.Where(o => o.Id == orders.Id);
+                return latestOrder.AsQueryable();
+            }
+            return new List<Order>().AsQueryable();
+        }
+
     }
 }

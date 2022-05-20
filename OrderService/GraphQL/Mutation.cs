@@ -93,23 +93,25 @@ namespace OrderService.GraphQL
 
         //Add Tracking By Courier
         [Authorize(Roles = new[] { "COURIER" })]
-        public async Task<OrderData> AddTrackingOrderAsync(
-            OrderData input,
+        public async Task<TrackingOrder> AddTrackingOrderAsync(
+            TrackingOrder input,
             [Service] FoodDeliveryAppContext context)
         {
             var order = context.Orders.Where(o => o.Id == input.Id).FirstOrDefault();
             if (order != null)
             {
                 // EF
-                order.Code = Guid.NewGuid().ToString();
-                order.UserId = input.UserId;
-                order.CourierId = input.CourierId;
+                order.Id = input.Id;
+                order.Longitude = input.Longitude;
+                order.Latitude = input.Latitude;
 
                 context.Orders.Update(order);
                 context.SaveChanges();
             }
             return input;
         }
+
+        
 
     }
 

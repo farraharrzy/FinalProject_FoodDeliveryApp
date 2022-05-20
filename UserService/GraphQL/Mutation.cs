@@ -172,7 +172,7 @@ namespace UserService.GraphQL
             return ret.Entity;
         }
 
-        //Manage Courier by Manager
+        //[MANAGE COURIER] by Manager
 
         [Authorize(Roles = new[] { "MANAGER" })]
         public async Task<UserData> AddCourierAsync(
@@ -213,6 +213,7 @@ namespace UserService.GraphQL
             });
         }
 
+        //Add Courier Profile By Manager
         [Authorize(Roles = new[] { "MANAGER" })]
         public async Task<CourierProfile> AddCourierProfileAsync(
             CourierProfileInput input,
@@ -231,6 +232,8 @@ namespace UserService.GraphQL
 
             return ret.Entity;
         }
+
+        //Update Courier Profile By Manager
         public async Task<CourierProfile> UpdateCourierProfileAsync(
             CourierProfileInput input,
             [Service] FoodDeliveryAppContext context)
@@ -247,20 +250,8 @@ namespace UserService.GraphQL
 
             return await Task.FromResult(kurir);
         }
-        public async Task<User> DeleteCourierByIdAsync(
-            int id,
-            [Service] FoodDeliveryAppContext context)
-        {
-            var user = context.Users.Where(o => o.Id == id).Include(o => o.UserRoles).FirstOrDefault();
-            if (user != null)
-            {
-                context.Users.Remove(user);
-                await context.SaveChangesAsync();
-            }
 
-            return await Task.FromResult(user);
-        }
-        //Delete CourierProfile
+        //Delete CourierProfile: STEP 1 REMOVE COURIER 
         public async Task<CourierProfile> DeleteCourierProfileAsync(
             int id,
             [Service] FoodDeliveryAppContext context)
@@ -274,6 +265,22 @@ namespace UserService.GraphQL
 
             return await Task.FromResult(kurir);
         }
+
+        //Delete User: Courier By Manager : STEP 2 FINISH DELETE COURIER
+        public async Task<User> DeleteCourierByIdAsync(
+            int id,
+            [Service] FoodDeliveryAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == id).Include(o => o.UserRoles).FirstOrDefault();
+            if (user != null)
+            {
+                context.Users.Remove(user);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(user);
+        }
+        
 
     }
 }
